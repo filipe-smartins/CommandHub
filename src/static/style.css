@@ -1,0 +1,10 @@
+body { font-family: Arial, sans-serif; background: #f7f7f7; }
+.container { max-width: 800px; margin: 40px auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px #ccc; }
+h1, h2 { color: #2c3e50; }
+ul { list-style: none; padding-left: 0; }
+li { margin-bottom: 15px; }
+pre { background: #eee; padding: 10px; border-radius: 4px; }
+form { margin-top: 30px; }
+button { background: #2980b9; color: #fff; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
+button:hover { background: #3498db; }
+img { margin-top: 10px; border-radius: 4px; }

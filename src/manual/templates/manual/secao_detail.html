@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% block content %}
+
+
+
+  <div class="page-header">
+    <h1>{{ tipo.tipo }} {{ secao.categoria.nome }} -> {{ secao.secao }} </h1>
+    <a href="{% url 'categoria_detail' secao.categoria.pk %}" class="btn btn-secondary">Voltar para Seções</a>
+  </div>
+
+  <div class="form-card">
+    <h3>Adicionar novo comando</h3>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+
+        <label for="id_comando">Comando</label> {{ form.comando }}
+
+        <label for="id_comentario">Comentário</label> {{ form.comentario }}
+
+        <label for="id_imagem">Imagem</label> {{ form.imagem }}
+
+      <button type="submit" class="btn btn-primary">Salvar</button>
+    </form>
+  </div>
+
+  <h2>Comandos cadastrados</h2>
+  <ul class="command-list">
+    {% for comando in comandos %}
+      <li class="card">
+        <pre>{{ comando.comando }}</pre>
+        <p>{{ comando.comentario }}</p>
+        {% if comando.imagem %}
+          <img src="{{ comando.imagem.url }}" alt="Imagem do comando">
+        {% endif %}
+        <small>Adicionado em: {{ comando.criado_em }}</small>
+      </li>
+    {% empty %}
+      <li class="card">Nenhum comando cadastrado ainda.</li>
+    {% endfor %}
+  </ul>
+
+
+<style>
+
+  .container { max-width: 900px; margin: 30px auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px #ccc; }
+
+  .page-header {
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.2rem;
+    margin-bottom: 0.2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .page-header h1 {
+    font-size: 2rem;
+    color: #333;
+    margin: 0;
+  }
+
+  h2 {
+    font-size: 1.6rem;
+    color: #444;
+    margin-top: 3rem;
+    margin-bottom: 0.7rem;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    margin-bottom: 1.0rem;
+    padding: 2.5rem;
+  }
+
+  .form-card label {
+    display: block;
+    margin-bottom: 0.2rem;
+    font-weight: 700;
+    color: #333;
+  }
+
+  .form-card textarea,
+  .form-card input[type="text"],
+  .form-card input[type="file"] {
+    width: 95%;
+    padding: 0.8rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+    margin-bottom: 1rem;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+
+  .form-card textarea:focus,
+  .form-card input[type="text"]:focus,
+  .form-card input[type="file"]:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 5px rgba(0,123,255,0.3);
+  }
+
+  .btn {
+    display: inline-block;
+    padding: 0.8rem 1.6rem;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    transition: background 0.3s ease;
+  }
+
+  .btn-primary {
+    background-color: #007bff;
+    color: #fff;
+  }
+
+  .btn-primary:hover {
+    background-color: #0056b3;
+  }
+
+  .btn-secondary {
+    background-color: #6c757d;
+    color: #fff;
+  }
+
+  .btn-secondary:hover {
+    background-color: #545b62;
+  }
+
+  .command-list {
+    list-style: none;
+    padding: 0;
+  }
+
+  .command-list pre {
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 1rem;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 1rem;
+  }
+
+  .command-list p {
+    color: #555;
+    margin-top: 0.5rem;
+  }
+
+  .command-list img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+    margin-top: 1rem;
+  }
+
+  .command-list small {
+    display: block;
+    margin-top: 1rem;
+    color: #888;
+    font-size: 0.85rem;
+  }
+
+  textarea {
+    min-height: 20px;
+    max-height: 200px;
+    height: 30px;
+  }
+
+</style>
+
+{% endblock %}

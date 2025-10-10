@@ -1,0 +1,296 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+
+<style>
+  /* Variáveis de Cor para fácil customização */
+  :root {
+    --primary-text: #333;
+    --secondary-text: #666;
+    --border-color: #e0e0e0;
+    --background-light: #fff;
+    --background-medium: #f9f9f9;
+    --background-hover: #f1f1f1;
+    --accent-blue: #007bff;
+    --action-add: #28a745;
+    --action-edit: #ffc107;
+    --action-delete: #dc3545;
+    --shadow-color: rgba(0, 0, 0, 0.05);
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  .page-header {
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .page-header h1 {
+    font-size: 2.5rem;
+    color: var(--primary-text);
+    font-weight: 600;
+  }
+  
+  .accordion-item {
+    background: var(--background-light);
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 12px var(--shadow-color);
+    transition: box-shadow 0.3s ease;
+  }
+
+  .accordion-item:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  }
+
+  .accordion-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    cursor: pointer;
+    padding: 1.25rem;
+    border: none;
+    background: transparent;
+    text-align: left;
+    position: relative;
+  }
+
+  .accordion-header h2 {
+    font-size: 1.5rem;
+    color: var(--primary-text);
+    margin: 0;
+    flex-grow: 1;
+  }
+  
+  .icon-toggle::before {
+    content: '\f078'; /* Ícone de seta para baixo do Font Awesome */
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    transition: transform 0.3s ease;
+    font-size: 1rem;
+    color: var(--secondary-text);
+  }
+
+  /* Rotação do ícone quando o accordion está ativo (aberto) */
+  .accordion-header.active .icon-toggle::before,
+  .category-header.active .icon-toggle::before {
+    transform: rotate(-180deg);
+  }
+
+  .panel {
+    padding: 0 1.25rem;
+    background-color: transparent;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-out;
+  }
+
+  .panel ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .panel > ul > li {
+    padding: 1rem 0;
+    border-top: 1px solid var(--border-color);
+  }
+  
+  .action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s;
+    position: absolute;
+    right: 40px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--background-light);
+    padding: 0.5rem;
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    z-index: 10;
+  }
+  
+  .accordion-header:hover .action-buttons,
+  .category-header:hover .action-buttons,
+  .secao-item:hover .action-buttons {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .action-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    text-decoration: none;
+    color: white;
+    font-size: 0.9rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .action-button:hover {
+    transform: scale(1.15);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  }
+  
+  .btn-add { background-color: var(--action-add); }
+  .btn-edit { background-color: var(--action-edit); }
+  .btn-delete { background-color: var(--action-delete); }
+  
+  .category-item {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .category-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    cursor: pointer;
+    position: relative;
+  }
+  
+  .category-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 500;
+  }
+
+  .panel-nested {
+    padding: 0;
+    background-color: transparent;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-out;
+  }
+  
+  .panel-nested ul {
+    padding-left: 1rem;
+    padding-bottom: 0.5rem;
+  }
+  
+  .secao-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+    position: relative;
+  }
+  
+  .secao-item:hover {
+    background-color: var(--background-hover);
+  }
+
+  .secao-item a:first-child {
+    color: var(--accent-blue);
+    text-decoration: none;
+    font-weight: 500;
+    flex-grow: 1;
+  }
+  
+  .empty-message {
+    padding: 1rem;
+    color: var(--secondary-text);
+    font-style: italic;
+  }
+</style>
+
+<div class="page-header">
+  <h1>Manual de Comandos</h1>
+</div>
+
+{% for tipo in tipos %}
+<div class="accordion-item">
+  <div class="accordion-header accordion-button">
+    <h2>{{ tipo.tipo }}</h2>
+    <div class="action-buttons">
+      <a href="{% url 'tipo_add' %}" class="action-button btn-add" title="Adicionar Tipo"><i class="fas fa-plus"></i></a>
+      <a href="{% url 'tipo_edit' tipo.id %}" class="action-button btn-edit" title="Editar Tipo"><i class="fas fa-pencil-alt"></i></a>
+      <a href="{% url 'tipo_delete' tipo.id %}" class="action-button btn-delete" title="Deletar Tipo"><i class="fas fa-trash-alt"></i></a>
+    </div>
+    <span class="icon-toggle"></span>
+  </div>
+  <div class="panel">
+    <ul>
+      {% for categoria in tipo.categorias.all %}
+        <li>
+          <div class="category-item">
+            <div class="category-header accordion-button-nested">
+                <h3>{{ categoria.nome }}</h3>
+                <div class="action-buttons">
+                    <a href="{% url 'categoria_add' categoria.id %}" class="action-button btn-add" title="Adicionar Categoria"><i class="fas fa-plus"></i></a>
+                    <a href="{% url 'categoria_edit' categoria.id %}" class="action-button btn-edit" title="Editar Categoria"><i class="fas fa-pencil-alt"></i></a>
+                    <a href="{% url 'categoria_delete' categoria.id %}" class="action-button btn-delete" title="Deletar Categoria"><i class="fas fa-trash-alt"></i></a>
+                </div>
+                <span class="icon-toggle"></span>
+            </div>
+            <div class="panel-nested">
+              <ul>
+                {% for secao in categoria.secoes.all %}
+                  <li class="secao-item">
+                    <a href="{% url 'secao_detail' secao.id %}">{{ secao.secao }}</a>
+                    <div class="action-buttons">
+                      <a href="{% url 'secao_add' secao.id %}" class="action-button btn-add" title="Adicionar Seção"><i class="fas fa-plus"></i></a>
+                      <a href="{% url 'secao_edit' secao.id %}" class="action-button btn-edit" title="Editar Seção"><i class="fas fa-pencil-alt"></i></a>
+                      <a href="{% url 'secao_delete' secao.id %}" class="action-button btn-delete" title="Deletar Seção"><i class="fas fa-trash-alt"></i></a>
+                    </div>
+                  </li>
+                {% empty %}
+                  <li class="empty-message">Nenhuma seção cadastrada.</li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+        </li>
+      {% empty %}
+        <li class="empty-message">Nenhuma categoria cadastrada.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endfor %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const accordionButtons = document.querySelectorAll('.accordion-button, .accordion-button-nested');
+
+    accordionButtons.forEach(button => {
+        button.addEventListener('click', function (e) {
+            if (e.target.closest('.action-button')) {
+                return;
+            }
+
+            // Adiciona a classe 'active' ao cabeçalho clicado (seja tipo ou categoria)
+            this.classList.toggle('active');
+            
+            const panel = this.nextElementSibling;
+
+            if (panel.style.maxHeight) {
+                panel.style.maxHeight = null;
+            } else {
+                panel.style.maxHeight = panel.scrollHeight + 'px';
+                
+                const parentPanel = this.closest('.panel, .panel-nested');
+                if (parentPanel && parentPanel.style.maxHeight) {
+                    parentPanel.style.maxHeight = parentPanel.scrollHeight + panel.scrollHeight + 'px';
+                }
+            }
+        });
+    });
+});
+</script>
+
+{% endblock %}

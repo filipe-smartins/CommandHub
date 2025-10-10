@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+  .container { max-width: 900px; margin: 30px auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px #ccc; }
+
+
+  .page-header {
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 1rem;
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .page-header h1 {
+    font-size: 2.5rem;
+    color: #333;
+    margin: 0;
+  }
+
+  h2 {
+    font-size: 1.8rem;
+    color: #444;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+    overflow: hidden;
+    transition: box-shadow 0.3s ease;
+  }
+  .card:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .item-list {
+    list-style: none;
+    padding: 0;
+  }
+  .item-list a {
+    text-decoration: none;
+    color: #0056b3;
+    font-size: 1.2rem;
+    font-weight: bold;
+  }
+
+  .form-card p {
+    margin-bottom: 1rem;
+  }
+  .form-card label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+  }
+
+  .form-card input[type="text"] {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
+
+  .btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+  }
+  .btn-primary {
+    background-color: #007bff;
+    color: #fff;
+  }
+  .btn-secondary {
+    background-color: #6c757d;
+    color: #fff;
+  }
+
+    textarea {
+    min-height: 20px;
+    max-height: 400px;
+    height: 30px;
+  }
+
+</style>
+
+
+  <div class="page-header">
+    <h2>Categorias de {{ tipo.tipo }}</h2>
+    <a href="{% url 'home' %}" class="btn btn-secondary">Voltar</a>
+  </div>
+
+  <h3>Adicionar nova categoria</h3>
+  <div class="card form-card">
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="btn btn-primary">Salvar</button>
+    </form>
+  </div>
+
+{% endblock %}
