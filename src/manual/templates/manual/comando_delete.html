@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="form-card">
+    <h3>Remover Comando</h3>
+    <p>Tem certeza de que deseja remover este comando?</p>
+    <pre>{{ comando.comando }}</pre>
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">Remover</button>
+      <a href="{% url 'secao_detail' comando.secao.id %}" class="btn ghost">Cancelar</a>
+    </form>
+  </div>
+{% endblock %}

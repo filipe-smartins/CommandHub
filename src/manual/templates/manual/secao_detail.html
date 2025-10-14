@@ -12,32 +12,156 @@
     <h3>Adicionar novo comando</h3>
     <form method="post" enctype="multipart/form-data">
       {% csrf_token %}
+        <label for="id_comando">Comando</label> {{ cform.comando }}
 
-        <label for="id_comando">Comando</label> {{ form.comando }}
+        <label for="id_comentario">Comentário</label> {{ cform.comentario }}
 
-        <label for="id_comentario">Comentário</label> {{ form.comentario }}
+        <label for="id_imagem">Imagem</label> {{ cform.imagem }}
 
-        <label for="id_imagem">Imagem</label> {{ form.imagem }}
-
-      <button type="submit" class="btn btn-primary">Salvar</button>
+      <button type="submit" name="comando_submit" class="btn btn-primary">Salvar</button>
     </form>
   </div>
 
-  <h2>Comandos cadastrados</h2>
-  <ul class="command-list">
-    {% for comando in comandos %}
-      <li class="card">
-        <pre>{{ comando.comando }}</pre>
-        <p>{{ comando.comentario }}</p>
-        {% if comando.imagem %}
-          <img src="{{ comando.imagem.url }}" alt="Imagem do comando">
-        {% endif %}
-        <small>Adicionado em: {{ comando.criado_em }}</small>
-      </li>
-    {% empty %}
-      <li class="card">Nenhum comando cadastrado ainda.</li>
-    {% endfor %}
-  </ul>
+  <div class="form-card" style="margin-top:16px">
+    <h3>Anexar artigo</h3>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <label for="id_titulo">Título</label> {{ aform.titulo }}
+      <label for="id_arquivo">Arquivo (.pdf, .docx, etc.)</label> {{ aform.arquivo }}
+      <button type="submit" name="artigo_submit" class="btn btn-primary">Anexar artigo</button>
+    </form>
+  </div>
+
+  <div style="display:flex;gap:12px;align-items:center;margin-top:20px">
+    <a href="?view=all" class="btn ghost">Todos</a>
+    <a href="?view=commands" class="btn ghost">Comandos</a>
+    <a href="?view=articles" class="btn ghost">Artigos</a>
+  </div>
+
+  {% if view_mode == 'all' or view_mode == 'commands' %}
+    <h2 style="margin-top:18px">Comandos cadastrados</h2>
+    <ul class="command-list">
+      {% for comando in comandos %}
+        <li class="card">
+          <div style="display:flex;justify-content:space-between;align-items:start">
+            <div style="flex:1">
+              <div class="pre-wrapper">
+                <button type="button" class="copy-btn" aria-label="Copiar comando">Copiar</button>
+                <pre>{{ comando.comando }}</pre>
+              </div>
+              <p>{{ comando.comentario }}</p>
+              {% if comando.imagem %}
+                <img src="{{ comando.imagem.url }}" alt="Imagem do comando">
+              {% endif %}
+              <small>Adicionado em: {{ comando.criado_em }}</small>
+            </div>
+            <div style="margin-left:12px;display:flex;flex-direction:column;gap:8px">
+              <a href="{% url 'comando_edit' comando.id %}" class="btn ghost">Editar</a>
+              <form method="post" action="{% url 'comando_delete' comando.id %}" style="margin:0">
+                {% csrf_token %}
+                <button type="submit" class="btn ghost">Remover</button>
+              </form>
+            </div>
+          </div>
+        </li>
+      {% empty %}
+        <li class="card">Nenhum comando cadastrado ainda.</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  {% if view_mode == 'all' or view_mode == 'articles' %}
+    <h2 style="margin-top:18px">Artigos anexados</h2>
+    <ul class="command-list" role="list">
+      {% for artigo in artigos %}
+        <li class="card" style="display:flex;justify-content:space-between;align-items:center">
+          <div style="flex:1">
+            <p>
+              <button type="button" class="btn ghost view-article" data-url="{{ artigo.arquivo.url }}" data-title="{{ artigo.titulo|escapejs }}">{{ artigo.titulo }}</button>
+            </p>
+            <small>Adicionado em: {{ artigo.criado_em }}</small>
+          </div>
+          <div style="margin-left:12px;display:flex;flex-direction:column;gap:8px">
+            <a href="{% url 'artigo_edit' artigo.id %}" class="btn ghost">Editar</a>
+            <form method="post" action="{% url 'artigo_delete' artigo.id %}" style="margin:0">
+              {% csrf_token %}
+              <button type="submit" class="btn ghost">Remover</button>
+            </form>
+          </div>
+        </li>
+      {% empty %}
+        <li class="card">Nenhum artigo anexado ainda.</li>
+      {% endfor %}
+    </ul>
+
+    <!-- DOCX viewer modal -->
+    <div id="docx-backdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1100"></div>
+    <div id="docx-modal" style="display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:1200;width:90%;max-width:1000px;max-height:85vh;overflow:auto;border-radius:8px;background:#fff;box-shadow:0 8px 24px rgba(0,0,0,0.3)">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;border-bottom:1px solid #eee">
+        <strong id="docx-modal-title"></strong>
+        <div>
+          <a id="docx-download" class="btn ghost" style="margin-right:8px" href="#">Download</a>
+          <button id="docx-modal-close" class="btn ghost">Fechar</button>
+        </div>
+      </div>
+      <div id="docx-viewer" style="padding:16px"></div>
+    </div>
+
+    <!-- docx-preview and helper scripts -->
+    <script src="https://unpkg.com/jszip/dist/jszip.min.js"></script>
+    <script src="https://unpkg.com/docx-preview/dist/docx-preview.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const modal = document.getElementById('docx-modal');
+      const backdrop = document.getElementById('docx-backdrop');
+      const viewer = document.getElementById('docx-viewer');
+      const titleEl = document.getElementById('docx-modal-title');
+      const closeBtn = document.getElementById('docx-modal-close');
+      const downloadLink = document.getElementById('docx-download');
+
+      async function openDoc(url, title) {
+        titleEl.textContent = title || 'Artigo';
+        viewer.innerHTML = '<p>Carregando documento…</p>';
+        backdrop.style.display = 'block';
+        modal.style.display = 'block';
+        downloadLink.href = url;
+        try {
+          const res = await fetch(url, { credentials: 'same-origin' });
+          if (!res.ok) throw new Error('Falha ao buscar o arquivo');
+          const blob = await res.blob();
+          viewer.innerHTML = '';
+          // docx-preview exposes `docx` global with renderAsync
+          if (window.docx && typeof window.docx.renderAsync === 'function') {
+            await window.docx.renderAsync(blob, viewer);
+          } else if (window.renderAsync) {
+            await window.renderAsync(blob, viewer);
+          } else {
+            viewer.innerHTML = '<p>Visualizador não disponível.</p>';
+          }
+        } catch (err) {
+          viewer.innerHTML = '<p>Erro ao carregar documento: ' + (err.message || err) + '</p>';
+        }
+      }
+
+      document.querySelectorAll('.view-article').forEach(btn => {
+        btn.addEventListener('click', function (e) {
+          e.preventDefault();
+          const url = this.getAttribute('data-url');
+          const title = this.getAttribute('data-title') || this.textContent.trim();
+          openDoc(url, title);
+        });
+      });
+
+      function closeModal() {
+        modal.style.display = 'none';
+        backdrop.style.display = 'none';
+        viewer.innerHTML = '';
+      }
+      closeBtn.addEventListener('click', closeModal);
+      backdrop.addEventListener('click', closeModal);
+    });
+    </script>
+  {% endif %}
 
 
 <style>
@@ -168,7 +292,7 @@
   textarea {
     min-height: 20px;
     max-height: 200px;
-    height: 30px;
+    height: 40px;
   }
 
 </style>

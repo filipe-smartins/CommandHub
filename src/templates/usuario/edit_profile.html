@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="card" style="display:flex;gap:20px;align-items:flex-start">
+    <div style="flex:0 0 140px;text-align:center">
+      {% if request.user.profile.avatar %}
+        <img src="{{ request.user.profile.avatar.url }}" class="avatar" alt="avatar">
+      {% else %}
+        <div class="avatar" style="display:flex;align-items:center;justify-content:center;background:#eef2ff;color:#2563eb;font-weight:700">{{ request.user.username|slice:":1"|upper }}</div>
+      {% endif %}
+    </div>
+    <div style="flex:1">
+      <h2>Edit profile</h2>
+      <form method="post" enctype="multipart/form-data" class="form-grid">
+        {% csrf_token %}
+        {{ pform.avatar.label_tag }}
+        {{ pform.avatar }}
+        <label for="id_bio">Bio</label>
+        {{ pform.bio }}
+        <label for="id_location">Location</label>
+        {{ pform.location }}
+        <div class="actions">
+          <button type="submit" class="btn">Save</button>
+          <a href="{% url 'usuario:profile' username=request.user.username %}" class="btn ghost">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}

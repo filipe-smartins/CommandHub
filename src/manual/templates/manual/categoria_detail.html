@@ -12,7 +12,7 @@
   .page-header {
     border-bottom: 1px solid #e0e0e0;
     padding-bottom: 1rem;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -30,7 +30,7 @@
   h2 {
     font-size: 1.8rem;
     color: #444;
-    margin-top: 2.5rem;
+    margin-top: 0.5rem;
     margin-bottom: 1.5rem;
   }
 
@@ -102,37 +102,130 @@
   }
 
   textarea {
-    min-height: 45px;
+    min-height: 20px;
     max-height: 45px;
-    height: 45px;
+    height: 40px;
   }
 
 </style>
 
-<div class="container">
+
   <div class="page-header">
-    <h1>{{ categoria.nome }} <span>({{ categoria.tipo }})</span></h1>
+    <h2>{{ categoria.nome }} <span>({{ categoria.tipo }})</span></h2>
     <a href="/" class="btn btn-secondary">Voltar</a>
   </div>
 
-  <h2>Seções</h2>
-  <ul class="section-list">
-    {% for secao in secoes %}
-      <li class="card">
-        <a href="{% url 'secao_detail' secao.pk %}">{{ secao.secao }}</a>
-      </li>
-    {% empty %}
-      <li class="card">Nenhuma seção cadastrada ainda.</li>
-    {% endfor %}
-  </ul>
+  <div style="display:grid;grid-template-columns: 1fr 320px; gap:20px; align-items:start">
+    <main>
+      <h3>Seções</h3>
+      <ul class="section-list">
+        {% for secao in secoes %}
+          <li class="card">
+            <a href="{% url 'secao_detail' secao.pk %}">{{ secao.secao }}</a>
+          </li>
+        {% empty %}
+          <li class="card">Nenhuma seção cadastrada ainda.
+            <div style="margin-top:10px">
+              <a href="#add-section" onclick="document.getElementById('add-section').scrollIntoView();" class="btn btn-primary">Adicionar seção</a>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
 
-  <h2>Adicionar nova seção</h2>
-  <div class="card form-card">
-    <form method="post">
-      {% csrf_token %}
-      {{ form.as_p }}
-      <button type="submit" class="btn btn-primary">Salvar</button>
-    </form>
+      <h2 id="add-section">Adicionar nova seção</h2>
+      <div class="card form-card">
+        <form method="post">
+          {% csrf_token %}
+          {{ form.as_p }}
+          <button type="submit" class="btn btn-primary">Salvar</button>
+        </form>
+      </div>
+    </main>
+
+    <aside>
+      <div class="card">
+        <h3>Anexos da categoria</h3>
+        {% for secao in secoes %}
+          <div style="margin-bottom:10px">
+            <strong>{{ secao.secao }}</strong>
+            <ul style="padding-left:12px;margin:6px 0">
+              {% for artigo in secao.artigos.all|slice:":5" %}
+                <li>
+                  <button type="button" class="btn ghost view-article" data-url="{{ artigo.arquivo.url }}" data-title="{{ artigo.titulo|escapejs }}">{{ artigo.titulo }}</button>
+                </li>
+              {% empty %}
+                <li style="color:#888">Sem anexos</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endfor %}
+      </div>
+    </aside>
   </div>
-</div>
+  <div>
+    <br>
+  </div>
+  <!-- DOCX viewer modal for category attachments -->
+  <div id="docx-backdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1100"></div>
+  <div id="docx-modal" style="display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:1200;width:90%;max-width:1000px;max-height:85vh;overflow:auto;border-radius:8px;background:#fff;box-shadow:0 8px 24px rgba(0,0,0,0.3)">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;border-bottom:1px solid #eee">
+      <strong id="docx-modal-title"></strong>
+      <div>
+        <a id="docx-download" class="btn ghost" style="margin-right:8px" href="#">Download</a>
+        <button id="docx-modal-close" class="btn ghost">Fechar</button>
+      </div>
+    </div>
+    <div id="docx-viewer" style="padding:16px"></div>
+  </div>
+
+  <script src="https://unpkg.com/jszip/dist/jszip.min.js"></script>
+  <script src="https://unpkg.com/docx-preview/dist/docx-preview.js"></script>
+  <script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const modal = document.getElementById('docx-modal');
+    const backdrop = document.getElementById('docx-backdrop');
+    const viewer = document.getElementById('docx-viewer');
+    const titleEl = document.getElementById('docx-modal-title');
+    const closeBtn = document.getElementById('docx-modal-close');
+    const downloadLink = document.getElementById('docx-download');
+
+    async function openDoc(url, title) {
+      titleEl.textContent = title || 'Artigo';
+      viewer.innerHTML = '<p>Carregando documento…</p>';
+      backdrop.style.display = 'block';
+      modal.style.display = 'block';
+      downloadLink.href = url;
+      try {
+        const res = await fetch(url, { credentials: 'same-origin' });
+        if (!res.ok) throw new Error('Falha ao buscar o arquivo');
+        const blob = await res.blob();
+        viewer.innerHTML = '';
+        if (window.docx && typeof window.docx.renderAsync === 'function') {
+          await window.docx.renderAsync(blob, viewer);
+        } else if (window.renderAsync) {
+          await window.renderAsync(blob, viewer);
+        } else {
+          viewer.innerHTML = '<p>Visualizador não disponível.</p>';
+        }
+      } catch (err) {
+        viewer.innerHTML = '<p>Erro ao carregar documento: ' + (err.message || err) + '</p>';
+      }
+    }
+
+    document.querySelectorAll('.view-article').forEach(btn => btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      const url = this.getAttribute('data-url');
+      const title = this.getAttribute('data-title') || this.textContent.trim();
+      openDoc(url, title);
+    }));
+
+    function closeModal() {
+      modal.style.display = 'none';
+      backdrop.style.display = 'none';
+      viewer.innerHTML = '';
+    }
+    closeBtn.addEventListener('click', closeModal);
+    backdrop.addEventListener('click', closeModal);
+  });
+  </script>
 {% endblock %}

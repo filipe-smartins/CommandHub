@@ -2,14 +2,82 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Manual de Comandos</title>
+    <title>Command Hub</title>
+    {% load static %}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="{% static 'style.css' %}">
     
 </head>
 <body>
-    <div class="container">
-        {% block content %}{% endblock %}
+    <div class="topbar">
+        <div class="inner">
+            <div class="brand">
+                <img src="{% static 'logo.png' %}" alt="logo" onerror="this.style.display='none'">
+                <div>Command Hub</div>
+            </div>
+            <div class="nav">
+                <a href="/">Home</a>
+                {% if request.user.is_authenticated %}
+                    <a href="{% url 'usuario:profile' username=request.user.username %}">Profile</a>
+                    <a href="{% url 'usuario:edit_profile' %}">Edit</a>
+                    <form action="{% url 'usuario:logout' %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn ghost">Logout</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'usuario:login' %}">Login</a>
+                    <a href="{% url 'usuario:register' %}">Register</a>
+                {% endif %}
+            </div>
+        </div>
     </div>
+
+    <div style="max-width:1100px;margin:18px auto;padding:0 16px">
+        {% if messages %}
+          <ul class="messages">
+            {% for message in messages %}
+              <li class="message {{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+    <script>
+    // Global copy-to-clipboard handler for .copy-btn
+    document.addEventListener('DOMContentLoaded', function () {
+        function handleCopyClick(e) {
+            const btn = e.currentTarget;
+            const wrapper = btn.closest('.pre-wrapper');
+            if (!wrapper) return;
+            const pre = wrapper.querySelector('pre');
+            if (!pre) return;
+            const text = pre.innerText.trim();
+            if (!text) return;
+            // Use navigator.clipboard when available
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function () {
+                    const orig = btn.innerText;
+                    btn.innerText = 'Copiado!';
+                    setTimeout(() => btn.innerText = orig, 1800);
+                }).catch(()=>{
+                    // fallback to execCommand
+                    const ta = document.createElement('textarea');
+                    ta.value = text; document.body.appendChild(ta); ta.select();
+                    try { document.execCommand('copy'); btn.innerText = 'Copiado!'; setTimeout(()=>btn.innerText='Copiar',1800);}catch(e){}
+                    ta.remove();
+                });
+            } else {
+                const ta = document.createElement('textarea');
+                ta.value = text; document.body.appendChild(ta); ta.select();
+                try { document.execCommand('copy'); btn.innerText = 'Copiado!'; setTimeout(()=>btn.innerText='Copiar',1800);}catch(e){}
+                ta.remove();
+            }
+        }
+
+        document.querySelectorAll('.copy-btn').forEach(b => b.addEventListener('click', handleCopyClick));
+    });
+    </script>
 </body>
 </html>

@@ -1,5 +1,6 @@
 from django.contrib import admin
 from .models import Tipo, Categoria, Secao, Comando
+from .models import Artigo
 
 @admin.register(Tipo)
 class TipoAdmin(admin.ModelAdmin):
@@ -23,3 +24,10 @@ class ComandoAdmin(admin.ModelAdmin):
     list_display = ("id", "secao", "comando", "criado_em")
     list_filter = ("secao",)
     search_fields = ("comando", "comentario")
+
+
+@admin.register(Artigo)
+class ArtigoAdmin(admin.ModelAdmin):
+    list_display = ("id", "titulo", "secao", "criado_em")
+    list_filter = ("secao",)
+    search_fields = ("titulo",)

@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="form-card">
+    <h3>Remover Artigo</h3>
+    <p>Tem certeza de que deseja remover o artigo "{{ artigo.titulo }}"?</p>
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">Remover</button>
+      <a href="{% url 'secao_detail' artigo.secao.id %}" class="btn ghost">Cancelar</a>
+    </form>
+  </div>
+{% endblock %}

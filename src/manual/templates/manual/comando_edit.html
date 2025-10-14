@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="form-card">
+    <h3>Editar Comando</h3>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="btn btn-primary">Salvar</button>
+      <a href="{% url 'secao_detail' comando.secao.id %}" class="btn ghost">Cancelar</a>
+    </form>
+  </div>
+{% endblock %}

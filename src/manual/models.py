@@ -30,3 +30,13 @@ class Comando(models.Model):
 
     def __str__(self):
         return f"{self.secao}: {self.comando[:30]}..."
+
+
+class Artigo(models.Model):
+    secao = models.ForeignKey(Secao, on_delete=models.CASCADE, related_name='artigos')
+    titulo = models.CharField(max_length=255)
+    arquivo = models.FileField(upload_to='artigos/')
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.titulo} ({self.secao})"

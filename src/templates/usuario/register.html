@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="card">
+    <h2>Create an account</h2>
+    <p class="muted">Join Command Hub to save and manage your commands.</p>
+    <form method="post" class="form-grid">
+      {% csrf_token %}
+      <div>
+        <label for="id_username">Username</label>
+        {{ form.username }}
+      </div>
+      <div>
+        <label for="id_email">Email</label>
+        {{ form.email }}
+      </div>
+      <div>
+        <label for="id_password1">Password</label>
+        {{ form.password1 }}
+      </div>
+      <div>
+        <label for="id_password2">Confirm password</label>
+        {{ form.password2 }}
+      </div>
+      <div class="actions">
+        <button type="submit" class="btn">Create account</button>
+        <a class="btn ghost" href="{% url 'usuario:login' %}">Already have an account?</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}

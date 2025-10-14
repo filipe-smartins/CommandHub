@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="card" style="display:flex;gap:20px;align-items:flex-start">
+    <div style="flex:0 0 160px;text-align:center">
+      {% if profile.avatar %}
+        <img src="{{ profile.avatar.url }}" class="avatar" alt="avatar">
+      {% else %}
+        <div class="avatar" style="display:flex;align-items:center;justify-content:center;background:#eef2ff;color:#2563eb;font-weight:700">{{ profile_user.username|slice:":1"|upper }}</div>
+      {% endif %}
+    </div>
+    <div style="flex:1">
+      <h2>{{ profile_user.get_full_name|default:profile_user.username }}</h2>
+      <p class="muted">{{ profile_user.email }}</p>
+      <h3 style="margin-top:12px">About</h3>
+      <p>{{ profile.bio|default:'No bio yet.' }}</p>
+      <p><strong>Location:</strong> {{ profile.location|default:'—' }}</p>
+      {% if request.user == profile_user %}
+        <div class="actions">
+          <a href="{% url 'usuario:edit_profile' %}" class="btn">Edit profile</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

@@ -88,7 +88,7 @@
     textarea {
     min-height: 20px;
     max-height: 400px;
-    height: 30px;
+    height: 40px;
   }
 
 </style>
@@ -99,7 +99,22 @@
     <a href="{% url 'home' %}" class="btn btn-secondary">Voltar</a>
   </div>
 
-  <h3>Adicionar nova categoria</h3>
+  <h3>Categorias</h3>
+  <ul class="item-list">
+    {% for categoria in categorias %}
+      <li class="card">
+        <a href="{% url 'categoria_detail' categoria.pk %}">{{ categoria.nome }}</a>
+      </li>
+    {% empty %}
+      <li class="card">Nenhuma categoria cadastrada ainda.
+        <div style="margin-top:10px">
+          <a href="#add-category" onclick="document.getElementById('add-category').scrollIntoView();" class="btn btn-primary">Adicionar categoria</a>
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+
+  <h3 id="add-category">Adicionar nova categoria</h3>
   <div class="card form-card">
     <form method="post">
       {% csrf_token %}

@@ -209,12 +209,12 @@
 </style>
 
 <div class="page-header">
-  <h1>Manual de Comandos</h1>
+  <h1>Command Hub</h1>
 </div>
 
 {% for tipo in tipos %}
 <div class="accordion-item">
-  <div class="accordion-header accordion-button">
+  <div class="accordion-header accordion-button" role="button" tabindex="0" aria-expanded="false" aria-controls="panel-tipo-{{ tipo.id }}">
     <h2>{{ tipo.tipo }}</h2>
     <div class="action-buttons">
       <a href="{% url 'tipo_add' %}" class="action-button btn-add" title="Adicionar Tipo"><i class="fas fa-plus"></i></a>
@@ -223,13 +223,13 @@
     </div>
     <span class="icon-toggle"></span>
   </div>
-  <div class="panel">
+  <div class="panel" id="panel-tipo-{{ tipo.id }}" role="region" aria-hidden="true">
     <ul>
       {% for categoria in tipo.categorias.all %}
         <li>
           <div class="category-item">
-            <div class="category-header accordion-button-nested">
-                <h3>{{ categoria.nome }}</h3>
+      <div class="category-header accordion-button-nested" role="button" tabindex="0" aria-expanded="false" aria-controls="panel-cat-{{ categoria.id }}">
+        <h3>{{ categoria.nome }}</h3>
                 <div class="action-buttons">
                     <a href="{% url 'categoria_add' categoria.id %}" class="action-button btn-add" title="Adicionar Categoria"><i class="fas fa-plus"></i></a>
                     <a href="{% url 'categoria_edit' categoria.id %}" class="action-button btn-edit" title="Editar Categoria"><i class="fas fa-pencil-alt"></i></a>
@@ -237,26 +237,34 @@
                 </div>
                 <span class="icon-toggle"></span>
             </div>
-            <div class="panel-nested">
+            <div class="panel-nested" id="panel-cat-{{ categoria.id }}" role="region" aria-hidden="true">
               <ul>
                 {% for secao in categoria.secoes.all %}
-                  <li class="secao-item">
-                    <a href="{% url 'secao_detail' secao.id %}">{{ secao.secao }}</a>
-                    <div class="action-buttons">
-                      <a href="{% url 'secao_add' secao.id %}" class="action-button btn-add" title="Adicionar Seção"><i class="fas fa-plus"></i></a>
-                      <a href="{% url 'secao_edit' secao.id %}" class="action-button btn-edit" title="Editar Seção"><i class="fas fa-pencil-alt"></i></a>
-                      <a href="{% url 'secao_delete' secao.id %}" class="action-button btn-delete" title="Deletar Seção"><i class="fas fa-trash-alt"></i></a>
-                    </div>
-                  </li>
-                {% empty %}
-                  <li class="empty-message">Nenhuma seção cadastrada.</li>
-                {% endfor %}
+                    <li class="secao-item">
+                      <a href="{% url 'secao_detail' secao.id %}">{{ secao.secao }}</a>
+                      <div class="action-buttons">
+                        <a href="{% url 'secao_add' secao.id %}" class="action-button btn-add" title="Adicionar Seção"><i class="fas fa-plus"></i></a>
+                        <a href="{% url 'secao_edit' secao.id %}" class="action-button btn-edit" title="Editar Seção"><i class="fas fa-pencil-alt"></i></a>
+                        <a href="{% url 'secao_delete' secao.id %}" class="action-button btn-delete" title="Deletar Seção"><i class="fas fa-trash-alt"></i></a>
+                      </div>
+                    </li>
+                  {% empty %}
+                    <li class="empty-message">Nenhuma seção cadastrada.
+                      <div style="margin-top:10px">
+                        <a href="{% url 'secao_add' categoria.id %}" class="btn btn-primary">Adicionar seção</a>
+                      </div>
+                    </li>
+                  {% endfor %}
               </ul>
             </div>
           </div>
         </li>
       {% empty %}
-        <li class="empty-message">Nenhuma categoria cadastrada.</li>
+        <li class="empty-message">Nenhuma categoria cadastrada.
+          <div style="margin-top:10px">
+            <a href="{% url 'categoria_add' tipo.id %}" class="btn btn-primary">Adicionar categoria</a>
+          </div>
+        </li>
       {% endfor %}
     </ul>
   </div>
@@ -268,27 +276,25 @@ document.addEventListener('DOMContentLoaded', function () {
     const accordionButtons = document.querySelectorAll('.accordion-button, .accordion-button-nested');
 
     accordionButtons.forEach(button => {
-        button.addEventListener('click', function (e) {
-            if (e.target.closest('.action-button')) {
-                return;
-            }
+        function toggleHeader(el) {
+          // ignore clicks on action buttons
+          if (event && event.target && event.target.closest('.action-button')) return;
+          el.classList.toggle('active');
+          const expanded = el.classList.contains('active');
+          el.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+          const panel = el.nextElementSibling;
+          if (!panel) return;
+          panel.style.maxHeight = expanded ? panel.scrollHeight + 'px' : null;
+          panel.setAttribute('aria-hidden', expanded ? 'false' : 'true');
+        }
 
-            // Adiciona a classe 'active' ao cabeçalho clicado (seja tipo ou categoria)
-            this.classList.toggle('active');
-            
-            const panel = this.nextElementSibling;
-
-            if (panel.style.maxHeight) {
-                panel.style.maxHeight = null;
-            } else {
-                panel.style.maxHeight = panel.scrollHeight + 'px';
-                
-                const parentPanel = this.closest('.panel, .panel-nested');
-                if (parentPanel && parentPanel.style.maxHeight) {
-                    parentPanel.style.maxHeight = parentPanel.scrollHeight + panel.scrollHeight + 'px';
-                }
-            }
+        button.addEventListener('click', function (e) { toggleHeader(this); });
+        button.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+            e.preventDefault(); toggleHeader(this);
+          }
         });
+        
     });
 });
 </script>
