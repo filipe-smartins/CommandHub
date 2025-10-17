@@ -8,7 +8,16 @@
     <a href="{% url 'categoria_detail' secao.categoria.pk %}" class="btn btn-secondary">Voltar para Seções</a>
   </div>
 
-  <div class="form-card">
+  {% if user.is_authenticated %}
+  <!-- Botão para adicionar comando -->
+  <div style="margin-bottom: 16px;">
+    <button type="button" class="btn btn-primary" onclick="toggleForm('comandoForm')" style="width: 100%; justify-content: space-between; display: flex; align-items: center;">
+      <span>➕ Adicionar novo comando</span>
+      <span id="comandoFormIcon">▼</span>
+    </button>
+  </div>
+  
+  <div id="comandoForm" class="form-card" style="display: none; margin-bottom: 16px;">
     <h3>Adicionar novo comando</h3>
     <form method="post" enctype="multipart/form-data">
       {% csrf_token %}
@@ -22,7 +31,15 @@
     </form>
   </div>
 
-  <div class="form-card" style="margin-top:16px">
+  <!-- Botão para anexar artigo -->
+  <div style="margin-bottom: 16px;">
+    <button type="button" class="btn btn-secondary" onclick="toggleForm('artigoForm')" style="width: 100%; justify-content: space-between; display: flex; align-items: center;">
+      <span>📎 Anexar artigo</span>
+      <span id="artigoFormIcon">▼</span>
+    </button>
+  </div>
+
+  <div id="artigoForm" class="form-card" style="display: none; margin-bottom: 16px;">
     <h3>Anexar artigo</h3>
     <form method="post" enctype="multipart/form-data">
       {% csrf_token %}
@@ -31,6 +48,14 @@
       <button type="submit" name="artigo_submit" class="btn btn-primary">Anexar artigo</button>
     </form>
   </div>
+  {% else %}
+  <div class="card" style="background: var(--info-light); border-color: var(--info);">
+    <p style="margin:0; color: var(--text);">
+      <strong>Nota:</strong> Você precisa estar logado para adicionar comandos ou artigos. 
+      <a href="{% url 'usuario:login' %}" class="btn btn-primary" style="margin-left: 12px;">Fazer Login</a>
+    </p>
+  </div>
+  {% endif %}
 
   <div style="display:flex;gap:12px;align-items:center;margin-top:20px">
     <a href="?view=all" class="btn ghost">Todos</a>
@@ -42,7 +67,7 @@
     <h2 style="margin-top:18px">Comandos cadastrados</h2>
     <ul class="command-list">
       {% for comando in comandos %}
-        <li class="card">
+        <li class="card" data-comando-id="{{ comando.id }}">
           <div style="display:flex;justify-content:space-between;align-items:start">
             <div style="flex:1">
               <div class="pre-wrapper">
@@ -53,8 +78,12 @@
               {% if comando.imagem %}
                 <img src="{{ comando.imagem.url }}" alt="Imagem do comando">
               {% endif %}
-              <small>Adicionado em: {{ comando.criado_em }}</small>
+              <small class="text-muted">
+                Adicionado em: {{ comando.criado_em|date:"d/m/Y às H:i" }}
+                {% if comando.autor %} por <strong>{{ comando.autor.username }}</strong>{% endif %}
+              </small>
             </div>
+            {% if user.is_authenticated %}
             <div style="margin-left:12px;display:flex;flex-direction:column;gap:8px">
               <a href="{% url 'comando_edit' comando.id %}" class="btn ghost">Editar</a>
               <form method="post" action="{% url 'comando_delete' comando.id %}" style="margin:0">
@@ -62,6 +91,7 @@
                 <button type="submit" class="btn ghost">Remover</button>
               </form>
             </div>
+            {% endif %}
           </div>
         </li>
       {% empty %}
@@ -79,8 +109,12 @@
             <p>
               <button type="button" class="btn ghost view-article" data-url="{{ artigo.arquivo.url }}" data-title="{{ artigo.titulo|escapejs }}">{{ artigo.titulo }}</button>
             </p>
-            <small>Adicionado em: {{ artigo.criado_em }}</small>
+            <small class="text-muted">
+              Adicionado em: {{ artigo.criado_em|date:"d/m/Y às H:i" }}
+              {% if artigo.autor %} por <strong>{{ artigo.autor.username }}</strong>{% endif %}
+            </small>
           </div>
+          {% if user.is_authenticated %}
           <div style="margin-left:12px;display:flex;flex-direction:column;gap:8px">
             <a href="{% url 'artigo_edit' artigo.id %}" class="btn ghost">Editar</a>
             <form method="post" action="{% url 'artigo_delete' artigo.id %}" style="margin:0">
@@ -88,6 +122,7 @@
               <button type="submit" class="btn ghost">Remover</button>
             </form>
           </div>
+          {% endif %}
         </li>
       {% empty %}
         <li class="card">Nenhum artigo anexado ainda.</li>
@@ -295,6 +330,154 @@
     height: 40px;
   }
 
+  /* Estilos para drag and drop */
+  {% if user.is_authenticated %}
+  .command-list li.card {
+    cursor: move;
+    transition: all var(--transition);
+  }
+
+  .command-list li.card:hover {
+    box-shadow: var(--shadow-lg);
+  }
+
+  .command-list li.card.sortable-ghost {
+    opacity: 0.4;
+    background: var(--gray-100);
+  }
+
+  .command-list li.card.sortable-drag {
+    opacity: 1;
+    transform: rotate(2deg);
+    box-shadow: var(--shadow-xl);
+  }
+
+  .drag-handle {
+    cursor: grab;
+    padding: var(--space-sm);
+    color: var(--gray-400);
+    display: inline-flex;
+    align-items: center;
+    margin-right: var(--space-sm);
+  }
+
+  .drag-handle:active {
+    cursor: grabbing;
+  }
+  {% endif %}
+
+  /* Estilos para os formulários colapsáveis */
+  #comandoForm, #artigoForm {
+    overflow: hidden;
+    transition: all 0.3s ease-in-out;
+    max-height: 0;
+    opacity: 0;
+  }
+
+  #comandoForm[style*="display: block"], #artigoForm[style*="display: block"] {
+    max-height: 1000px;
+    opacity: 1;
+  }
+
 </style>
+
+<!-- Script para toggle dos formulários -->
+{% if user.is_authenticated %}
+<script>
+function toggleForm(formId) {
+    const form = document.getElementById(formId);
+    const icon = document.getElementById(formId + 'Icon');
+    
+    if (form.style.display === 'none' || form.style.display === '') {
+        // Mostra o formulário
+        form.style.display = 'block';
+        // Pequeno delay para ativar a animação
+        setTimeout(() => {
+            form.style.maxHeight = '1000px';
+            form.style.opacity = '1';
+        }, 10);
+        icon.textContent = '▲';
+    } else {
+        // Oculta o formulário
+        form.style.maxHeight = '0';
+        form.style.opacity = '0';
+        setTimeout(() => {
+            form.style.display = 'none';
+        }, 300); // Tempo da transição
+        icon.textContent = '▼';
+    }
+}
+</script>
+{% endif %}
+
+<!-- Sortable.js CDN para drag and drop -->
+{% if user.is_authenticated %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const comandosList = document.querySelector('.command-list');
+    
+    if (comandosList && comandosList.children.length > 0) {
+        // Adiciona ícone de drag em cada card
+        const cards = comandosList.querySelectorAll('li.card');
+        cards.forEach(card => {
+            const firstDiv = card.querySelector('div:first-child');
+            if (firstDiv) {
+                const dragHandle = document.createElement('span');
+                dragHandle.className = 'drag-handle';
+                dragHandle.innerHTML = '⋮⋮';
+                dragHandle.title = 'Arraste para reordenar';
+                firstDiv.insertBefore(dragHandle, firstDiv.firstChild);
+            }
+        });
+
+        // Inicializa Sortable.js
+        const sortable = new Sortable(comandosList, {
+            animation: 150,
+            handle: '.drag-handle',
+            ghostClass: 'sortable-ghost',
+            dragClass: 'sortable-drag',
+            onEnd: function(evt) {
+                // Pega a nova ordem dos comandos
+                const comandosOrdem = [];
+                const items = comandosList.querySelectorAll('li.card[data-comando-id]');
+                items.forEach(item => {
+                    const comandoId = item.getAttribute('data-comando-id');
+                    if (comandoId) {
+                        comandosOrdem.push(parseInt(comandoId));
+                    }
+                });
+
+                // Envia a nova ordem para o servidor
+                fetch('{% url "comando_reorder" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        ordem: comandosOrdem
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        console.log('Ordem atualizada com sucesso!');
+                    } else {
+                        console.error('Erro ao atualizar ordem:', data.message);
+                        alert('Erro ao salvar a nova ordem. Por favor, recarregue a página.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro ao salvar a nova ordem. Por favor, recarregue a página.');
+                });
+            }
+        });
+    }
+});
+</script>
+{% endif %}
 
 {% endblock %}

@@ -22,4 +22,6 @@ urlpatterns = [
     path('tipo/add/', views.tipo_add, name='tipo_add'),
     path('categoria/add/<int:tipo_id>/', views.categoria_add, name='categoria_add'),
     path('secao/add/<int:categoria_id>/', views.secao_add, name='secao_add'),
+    # Reordenação de comandos
+    path('comando/reorder/', views.comando_reorder, name='comando_reorder'),
 ]
