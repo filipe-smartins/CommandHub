@@ -1,9 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseRedirect, JsonResponse, HttpResponseForbidden
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib import messages
 from django import forms
 import json
 from .models import Tipo, Categoria, Secao, Comando, Artigo
@@ -113,10 +114,22 @@ def tipo_add(request):
 @login_required
 def tipo_edit(request, tipo_id):
     tipo = get_object_or_404(Tipo, id=tipo_id)
+    
+    # Verifica se o usuário é o autor
+    if tipo.autor != request.user:
+        messages.error(request, 'Você não tem permissão para editar este tipo.')
+        return redirect('home')
+    
+    # Verifica se o tipo tem categorias (conteúdo)
+    if tipo.categorias.exists():
+        messages.error(request, 'Não é possível editar um tipo que possui categorias. Remova as categorias primeiro.')
+        return redirect('home')
+    
     if request.method == 'POST':
         form = TipoForm(request.POST, instance=tipo)
         if form.is_valid():
             form.save()
+            messages.success(request, 'Tipo atualizado com sucesso!')
             return redirect('home')
     else:
         form = TipoForm(instance=tipo)
@@ -126,8 +139,20 @@ def tipo_edit(request, tipo_id):
 @login_required
 def tipo_delete(request, tipo_id):
     tipo = get_object_or_404(Tipo, id=tipo_id)
+    
+    # Verifica se o usuário é o autor
+    if tipo.autor != request.user:
+        messages.error(request, 'Você não tem permissão para deletar este tipo.')
+        return redirect('home')
+    
+    # Verifica se o tipo tem categorias (conteúdo)
+    if tipo.categorias.exists():
+        messages.error(request, 'Não é possível deletar um tipo que possui categorias. Remova as categorias primeiro.')
+        return redirect('home')
+    
     if request.method == 'POST':
         tipo.delete()
+        messages.success(request, 'Tipo removido com sucesso!')
         return redirect('home')
     return render(request, 'manual/tipo_delete.html', {'tipo': tipo})
 
@@ -153,10 +178,22 @@ def categoria_add(request, tipo_id):
 @login_required
 def categoria_edit(request, categoria_id):
     categoria = get_object_or_404(Categoria, id=categoria_id)
+    
+    # Verifica se o usuário é o autor
+    if categoria.autor != request.user:
+        messages.error(request, 'Você não tem permissão para editar esta categoria.')
+        return redirect('home')
+    
+    # Verifica se a categoria tem seções (conteúdo)
+    if categoria.secoes.exists():
+        messages.error(request, 'Não é possível editar uma categoria que possui seções. Remova as seções primeiro.')
+        return redirect('home')
+    
     if request.method == 'POST':
         form = CategoriaForm(request.POST, instance=categoria)
         if form.is_valid():
             form.save()
+            messages.success(request, 'Categoria atualizada com sucesso!')
             return redirect('home')
     else:
         form = CategoriaForm(instance=categoria)
@@ -166,8 +203,20 @@ def categoria_edit(request, categoria_id):
 @login_required
 def categoria_delete(request, categoria_id):
     categoria = get_object_or_404(Categoria, id=categoria_id)
+    
+    # Verifica se o usuário é o autor
+    if categoria.autor != request.user:
+        messages.error(request, 'Você não tem permissão para deletar esta categoria.')
+        return redirect('home')
+    
+    # Verifica se a categoria tem seções (conteúdo)
+    if categoria.secoes.exists():
+        messages.error(request, 'Não é possível deletar uma categoria que possui seções. Remova as seções primeiro.')
+        return redirect('home')
+    
     if request.method == 'POST':
         categoria.delete()
+        messages.success(request, 'Categoria removida com sucesso!')
         return redirect('home')
     return render(request, 'manual/categoria_delete.html', {'categoria': categoria})
 
@@ -193,10 +242,22 @@ def secao_add(request, categoria_id):
 @login_required
 def secao_edit(request, secao_id):
     secao = get_object_or_404(Secao, id=secao_id)
+    
+    # Verifica se o usuário é o autor
+    if secao.autor != request.user:
+        messages.error(request, 'Você não tem permissão para editar esta seção.')
+        return redirect('home')
+    
+    # Verifica se a seção tem comandos ou artigos (conteúdo)
+    if secao.comandos.exists() or secao.artigos.exists():
+        messages.error(request, 'Não é possível editar uma seção que possui comandos ou artigos. Remova o conteúdo primeiro.')
+        return redirect('home')
+    
     if request.method == 'POST':
         form = SecaoForm(request.POST, instance=secao)
         if form.is_valid():
             form.save()
+            messages.success(request, 'Seção atualizada com sucesso!')
             return redirect('home')
     else:
         form = SecaoForm(instance=secao)
@@ -206,8 +267,20 @@ def secao_edit(request, secao_id):
 @login_required
 def secao_delete(request, secao_id):
     secao = get_object_or_404(Secao, id=secao_id)
+    
+    # Verifica se o usuário é o autor
+    if secao.autor != request.user:
+        messages.error(request, 'Você não tem permissão para deletar esta seção.')
+        return redirect('home')
+    
+    # Verifica se a seção tem comandos ou artigos (conteúdo)
+    if secao.comandos.exists() or secao.artigos.exists():
+        messages.error(request, 'Não é possível deletar uma seção que possui comandos ou artigos. Remova o conteúdo primeiro.')
+        return redirect('home')
+    
     if request.method == 'POST':
         secao.delete()
+        messages.success(request, 'Seção removida com sucesso!')
         return redirect('home')
     return render(request, 'manual/secao_delete.html', {'secao': secao})
 
@@ -217,10 +290,17 @@ def secao_delete(request, secao_id):
 @login_required
 def comando_edit(request, comando_id):
     comando = get_object_or_404(Comando, id=comando_id)
+    
+    # Verifica se o usuário é o autor
+    if comando.autor != request.user:
+        messages.error(request, 'Você não tem permissão para editar este comando.')
+        return redirect('secao_detail', secao_id=comando.secao.id)
+    
     if request.method == 'POST':
         form = ComandoForm(request.POST, request.FILES, instance=comando)
         if form.is_valid():
             form.save()
+            messages.success(request, 'Comando atualizado com sucesso!')
             return redirect('secao_detail', secao_id=comando.secao.id)
     else:
         form = ComandoForm(instance=comando)
@@ -231,8 +311,15 @@ def comando_edit(request, comando_id):
 def comando_delete(request, comando_id):
     comando = get_object_or_404(Comando, id=comando_id)
     secao_id = comando.secao.id
+    
+    # Verifica se o usuário é o autor
+    if comando.autor != request.user:
+        messages.error(request, 'Você não tem permissão para deletar este comando.')
+        return redirect('secao_detail', secao_id=secao_id)
+    
     if request.method == 'POST':
         comando.delete()
+        messages.success(request, 'Comando removido com sucesso!')
         return redirect('secao_detail', secao_id=secao_id)
     return render(request, 'manual/comando_delete.html', {'comando': comando})
 
@@ -242,10 +329,17 @@ def comando_delete(request, comando_id):
 @login_required
 def artigo_edit(request, artigo_id):
     artigo = get_object_or_404(Artigo, id=artigo_id)
+    
+    # Verifica se o usuário é o autor
+    if artigo.autor != request.user:
+        messages.error(request, 'Você não tem permissão para editar este artigo.')
+        return redirect('secao_detail', secao_id=artigo.secao.id)
+    
     if request.method == 'POST':
         form = ArtigoForm(request.POST, request.FILES, instance=artigo)
         if form.is_valid():
             form.save()
+            messages.success(request, 'Artigo atualizado com sucesso!')
             return redirect('secao_detail', secao_id=artigo.secao.id)
     else:
         form = ArtigoForm(instance=artigo)
@@ -256,9 +350,16 @@ def artigo_edit(request, artigo_id):
 def artigo_delete(request, artigo_id):
     artigo = get_object_or_404(Artigo, id=artigo_id)
     secao_id = artigo.secao.id
+    
+    # Verifica se o usuário é o autor
+    if artigo.autor != request.user:
+        messages.error(request, 'Você não tem permissão para deletar este artigo.')
+        return redirect('secao_detail', secao_id=secao_id)
+    
     if request.method == 'POST':
         artigo.arquivo.delete(save=False)
         artigo.delete()
+        messages.success(request, 'Artigo removido com sucesso!')
         return redirect('secao_detail', secao_id=secao_id)
     return render(request, 'manual/artigo_delete.html', {'artigo': artigo})
 

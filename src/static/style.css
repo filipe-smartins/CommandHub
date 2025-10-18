@@ -491,27 +491,31 @@ textarea {
     position: absolute;
     right: var(--space-md);
     top: var(--space-md);
-    background: var(--primary);
-    color: white;
-    border: none;
-    padding: 8px 16px;
+    background: transparent;
+    color: var(--gray-400);
+    border: 2px solid var(--gray-300);
+    padding: 6px 14px;
     border-radius: var(--radius);
     cursor: pointer;
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
     transition: all var(--transition);
-    box-shadow: var(--shadow-sm);
     z-index: 10;
 }
 
 .copy-btn:hover {
-    background: var(--primary-hover);
+    background: rgba(59, 130, 246, 0.05);
+    color: var(--primary);
+    border-color: var(--primary);
     transform: translateY(-1px);
-    box-shadow: var(--shadow);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
 }
 
 .copy-btn:active {
     transform: translateY(0);
+    background: rgba(59, 130, 246, 0.1);
 }
 
 /* === UTILITY CLASSES === */

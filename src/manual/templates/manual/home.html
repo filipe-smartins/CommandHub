@@ -219,8 +219,10 @@
     {% if user.is_authenticated %}
     <div class="action-buttons">
       <a href="{% url 'tipo_add' %}" class="action-button btn-add" title="Adicionar Tipo"><i class="fas fa-plus"></i></a>
+      {% if tipo.autor == user and not tipo.categorias.exists %}
       <a href="{% url 'tipo_edit' tipo.id %}" class="action-button btn-edit" title="Editar Tipo"><i class="fas fa-pencil-alt"></i></a>
       <a href="{% url 'tipo_delete' tipo.id %}" class="action-button btn-delete" title="Deletar Tipo"><i class="fas fa-trash-alt"></i></a>
+      {% endif %}
     </div>
     {% endif %}
     <span class="icon-toggle"></span>
@@ -234,9 +236,11 @@
         <h3>{{ categoria.nome }}</h3>
                 {% if user.is_authenticated %}
                 <div class="action-buttons">
-                    <a href="{% url 'categoria_add' categoria.id %}" class="action-button btn-add" title="Adicionar Categoria"><i class="fas fa-plus"></i></a>
+                    <a href="{% url 'categoria_add' tipo.id %}" class="action-button btn-add" title="Adicionar Categoria"><i class="fas fa-plus"></i></a>
+                    {% if categoria.autor == user and not categoria.secoes.exists %}
                     <a href="{% url 'categoria_edit' categoria.id %}" class="action-button btn-edit" title="Editar Categoria"><i class="fas fa-pencil-alt"></i></a>
                     <a href="{% url 'categoria_delete' categoria.id %}" class="action-button btn-delete" title="Deletar Categoria"><i class="fas fa-trash-alt"></i></a>
+                    {% endif %}
                 </div>
                 {% endif %}
                 <span class="icon-toggle"></span>
@@ -248,9 +252,13 @@
                       <a href="{% url 'secao_detail' secao.id %}">{{ secao.secao }}</a>
                       {% if user.is_authenticated %}
                       <div class="action-buttons">
-                        <a href="{% url 'secao_add' secao.id %}" class="action-button btn-add" title="Adicionar Seção"><i class="fas fa-plus"></i></a>
+                        <a href="{% url 'secao_add' categoria.id %}" class="action-button btn-add" title="Adicionar Seção"><i class="fas fa-plus"></i></a>
+                        {% if secao.autor == user %}
+                        {% if not secao.comandos.exists and not secao.artigos.exists %}
                         <a href="{% url 'secao_edit' secao.id %}" class="action-button btn-edit" title="Editar Seção"><i class="fas fa-pencil-alt"></i></a>
                         <a href="{% url 'secao_delete' secao.id %}" class="action-button btn-delete" title="Deletar Seção"><i class="fas fa-trash-alt"></i></a>
+                        {% endif %}
+                        {% endif %}
                       </div>
                       {% endif %}
                     </li>

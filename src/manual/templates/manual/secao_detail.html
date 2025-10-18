@@ -83,7 +83,7 @@
                 {% if comando.autor %} por <strong>{{ comando.autor.username }}</strong>{% endif %}
               </small>
             </div>
-            {% if user.is_authenticated %}
+            {% if user.is_authenticated and comando.autor == user %}
             <div style="margin-left:12px;display:flex;flex-direction:column;gap:8px">
               <a href="{% url 'comando_edit' comando.id %}" class="btn ghost">Editar</a>
               <form method="post" action="{% url 'comando_delete' comando.id %}" style="margin:0">
@@ -114,7 +114,7 @@
               {% if artigo.autor %} por <strong>{{ artigo.autor.username }}</strong>{% endif %}
             </small>
           </div>
-          {% if user.is_authenticated %}
+          {% if user.is_authenticated and artigo.autor == user %}
           <div style="margin-left:12px;display:flex;flex-direction:column;gap:8px">
             <a href="{% url 'artigo_edit' artigo.id %}" class="btn ghost">Editar</a>
             <form method="post" action="{% url 'artigo_delete' artigo.id %}" style="margin:0">
@@ -206,7 +206,7 @@
   .page-header {
     border-bottom: 1px solid #e0e0e0;
     padding-bottom: 0.2rem;
-    margin-bottom: 0.2rem;
+    margin-bottom: 1.2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -295,8 +295,9 @@
   }
 
   .command-list pre {
-    background-color: #f8f9fa;
-    border: 1px solid #ddd;
+    background-color: #525050;
+    color: #e0e0e0;
+    border: 1px solid #444;
     border-radius: 6px;
     padding: 1rem;
     white-space: pre-wrap;
